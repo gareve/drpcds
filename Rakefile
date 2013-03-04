@@ -5,7 +5,7 @@ Bundler.require
 
 desc 'Generate a new hash file as a unix passwd file'
 task :gen do
-    test_word = 'asdasdsd'
+    test_word = 'zdefer'
 	puts "Generating a new passwd Hash File of size #{test_word.length}"
 
     open('file.hash','w') do |f|
@@ -22,7 +22,14 @@ end
 desc 'Initate a new Crack Client'
 task :client do
 	puts 'Initating Client'
-	require 'client/client.rb'
+	
+    start_client()
+end
+
+desc 'Calculates the processing power of the client machine'
+task :calc_power do
+    puts 'Calculating processing power'
+    calculate_power
 end
 
 desc 'Rspec Tests'

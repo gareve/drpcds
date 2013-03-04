@@ -1,3 +1,7 @@
+require 'ntlm'
+require './hashcat'
+require './ntlm_hash'
+
 DIVS = 1
 LENGTH = 2
 #Instantiation of the hashcat files

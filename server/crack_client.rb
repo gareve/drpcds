@@ -3,11 +3,11 @@ class CrackClient
 
 	attr_reader :queue,:hostname,:__id__,:pass_per_sec,:pass
 
-	def initialize hostname,client_id
+	def initialize hostname,client_id,pass_per_sec
 		@queue = []
 		@__id__ = client_id
 		@hostname = hostname
-		@pass_per_sec = 13333332
+		@pass_per_sec = pass_per_sec
 		@pass = nil
 	end
 

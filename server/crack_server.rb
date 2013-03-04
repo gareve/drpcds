@@ -1,6 +1,6 @@
 class CrackServer
 	include DRbUndumped
-	attr_reader :hash_file,:password,:alphabet,:clients,:start_time,:end_time
+	attr_reader :hash_file,:password,:alphabet,:clients,:start_time,:end_time,:statistics_queue
 
 	def initialize hash_file,alphabet
 		@clients = {}
@@ -12,15 +12,17 @@ class CrackServer
 
 		@start_time = nil
 		@end_time = nil
+
+		@statistics_queue = []
 	end
 
-	def add_client hostname
+	def add_client hostname,pass_per_sec
 		mx = 0
 		@clients.each do |client_id,client|
 			mx = [mx,client.__id__].max if client.hostname == hostname
 		end
 
-		client = CrackClient.new hostname,mx+1
+		client = CrackClient.new hostname,mx+1,pass_per_sec
 		@clients[client.id] = client
 
 		printf("Client [%s] added\n",client.id)
@@ -38,13 +40,6 @@ class CrackServer
 
 		printf("Client [%s] removed\n",client_id)
 		printf("   [%d] clients left\n",@clients.size)
-	end
-
-	def get_queue_size client_id
-		ans = @clients[client_id].queue.size
-		add_intervals if ans == 0
-
-		ans
 	end
 
 	def get_interval client_id
@@ -73,7 +68,7 @@ class CrackServer
 		return if @clients.empty?
 
 		@clients.each do |client_id,client|
-			while client.queue.size < 5
+			while client.queue.size < 10
 				@start_time = Time.now if @start_time.nil?
 
 				chunk_size = client.pass_per_sec * 1 * 10
@@ -82,6 +77,29 @@ class CrackServer
 				client.add_interval interval
 			end
 		end
+	end
+
+	def send_statistics total_time,computing_time,sleep_time,pass_sec,client_id
+		@statistics_queue << [total_time,computing_time,sleep_time,pass_sec,client_id]
+	end
+
+	def show_statistics
+		until @statistics_queue.empty?
+			total_time,computing_time,sleep_time,pass_sec,client_id = @statistics_queue.shift
+
+			puts "########### Client[#{client_id}] Statistics #############"
+			puts "Total Time   : %.6f" % [total_time]
+			puts "Process Time : %.6f" % [computing_time]
+			puts "Sleep Time   : %.6f" % [sleep_time]
+			puts "Pass/Sec     : %d" % [pass_sec]		
+		end
+	end
+
+	def get_status client_id
+		queue_size = @clients[client_id].queue.size
+		add_intervals if queue_size == 0
+
+		[queue_size > 0, hasPassword()]
 	end
 
 	def setPassword password

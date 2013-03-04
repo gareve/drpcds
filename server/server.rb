@@ -1,4 +1,3 @@
-
 HASH_FILE = "file.hash"
 
 hash_file = open(HASH_FILE).read
@@ -11,8 +10,10 @@ puts "Server running at #{DRb.uri}"
 begin
    until crack_server.hasPassword
       crack_server.add_intervals
+      crack_server.show_statistics
       sleep 5
    end
+   crack_server.show_statistics
 
    total = crack_server.end_time.to_i - crack_server.start_time.to_i
 

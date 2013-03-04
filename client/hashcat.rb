@@ -6,8 +6,16 @@ class Hashcat
 
 		@alphabet = alpha
 		@hash_content = hash_content
-      @hash_file = session_name+'.hash'      
+      @hash_file = session_name+'.hash'
+
+      write_file
 	end
+
+   def write_file
+      open(@hash_file,'w') do |f|
+         f.puts @hash_content
+      end
+   end
 
    def run_cracking
    	cmd = 'hashcat-cli64.bin'  +
@@ -33,8 +41,8 @@ class Hashcat
       #File.delete('eula.accepted')
    	if output =~ /recovered/
    		pass = output.match(/:([^ ]*)$/)[1].to_s
-   		puts '################## FOUND #########################'
-   		puts pass
+   		#puts '################## FOUND #########################'
+   		#puts pass
    		#puts '################## FOUND #########################'
          return pass
    	else
