@@ -3,17 +3,19 @@ PROCESS_POWER_FILE = 'client_power.stats'
 
 def calculate_power
    start = 1
-   finish = 10 ** 8
+   #finish = 10 ** 8
+   finish = 10 ** 11
    
    alphabet = 'abcdefghijklmnopqrstuvwxyz'
 
-   test_pass = 'aaaaabbbbb'
+   test_pass = 'aaaasdabbbbb'
 
    ntlm_hash = pass_to_ntml_hash(test_pass)
    length = test_pass.size
    session_name = 'calculatin_power'
 
    ans,pass_per_sec,process_time = crack_interval start,finish,length,alphabet,ntlm_hash,session_name
+	
 
    puts '########### POWER ##############'
    puts pass_per_sec
@@ -36,21 +38,32 @@ def info message
    puts Time.now.strftime("%d/%m/%y %H:%M:%S : ") + message
 end
 
+IS_187 = !`ruby -v`.match(/1\.8\.7/).nil?
+
 def to_digit ch
+if IS_187
+   return ch - ?0 if(ch <= ?9)
+   return ch - ?a + 10
+else
    return ch.ord - '0'.ord if(ch <= '9')
    return ch.ord - 'a'.ord + 10
+end
 end
 
 def num_to_base num,alphabet,length
    len = alphabet.size
 
    res = num.to_s(len)
+
    res.size.times do |i|
       d = to_digit(res[i])
       res[i] = alphabet[d]
    end
-
+if IS_187
+   res = (alphabet[0].chr * [0,length - res.size].max) + res
+else
    res = (alphabet[0] * [0,length - res.size].max) + res
+end
 
    res
 end

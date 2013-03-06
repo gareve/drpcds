@@ -6,7 +6,7 @@ DIVS = 1
 LENGTH = 2
 #Instantiation of the hashcat files
 (('a'*LENGTH)..('z'*LENGTH)).each do |word|
-#['asd'].each do |word|
+#['asdsasd'].each do |word|
     describe Hashcat do
         it "Cracking [#{word}]" do
             start = 0
@@ -18,8 +18,11 @@ LENGTH = 2
             session_name = 'test_session'
 
             found = false
+		
+		times = DIVS
+		times += 1 unless chunk_size % DIVS == 0
             
-            (DIVS+1).times do
+            times.times do
                 chunk = chunk_size / DIVS
                 
                 hashcat = Hashcat.new(start,chunk,length,alphabet,hash_content,session_name)

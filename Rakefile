@@ -5,7 +5,7 @@ Bundler.require
 
 desc 'Generate a new hash file as a unix passwd file'
 task :gen do
-    test_word = 'zdefer'
+    test_word = 'zdeferew'
 	puts "Generating a new passwd Hash File of size #{test_word.length}"
 
     open('file.hash','w') do |f|
