@@ -35,7 +35,15 @@ def measure_time
 end
 
 def info message
-   puts Time.now.strftime("%d/%m/%y %H:%M:%S : ") + message
+   str = Time.now.strftime("%d/%m/%y %H:%M:%S : ") + message
+   puts str
+
+   begin
+      open(@clientid+'.log','a') do |f|
+         f.puts str
+      end
+   rescue => e
+   end
 end
 
 IS_187 = !`ruby -v`.match(/1\.8\.7/).nil?
@@ -108,6 +116,8 @@ def start_client
    client_num = client_info[1]
    ntlm_hash  = client_info[2]
    alphabet   = client_info[3]
+
+   @clientid = client_id
 
    puts "Client id = " + client_id
    puts "Hash File request: " + ntlm_hash
