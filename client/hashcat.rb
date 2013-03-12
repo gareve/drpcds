@@ -21,7 +21,7 @@ class Hashcat
    end
 
    def run_cracking
-	cpuHashcat = 'hashcat-cli64.bin'
+	cpuHashcat = '/root/hashcat-0.42/hashcat-cli64.bin'
 	gpuHashcat = '/root/oclHashcat-lite-0.14/cudaHashcat-lite64.bin'
 
 	
