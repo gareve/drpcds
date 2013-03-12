@@ -40,7 +40,7 @@ class Hashcat
    					' ' + '?1'*@length
 	else
 	   	cmd = cpuHashcat  +
-                  ' --threads=2' +
+                  ' --threads=1' +
   					" --pw-min=#{@length}"  +
   					" --pw-max=#{@length}"  +
    					' --hash-mode=1000' + #NTLM
