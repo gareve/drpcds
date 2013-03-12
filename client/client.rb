@@ -105,7 +105,7 @@ end
 
 def start_client
    DRb.start_service
-   crack_server = DRbObject.new nil, 'druby://localhost:6666'
+   crack_server = DRbObject.new nil, 'druby://ip-10-16-2-95.ec2.internal:6666'
 
    pass_per_sec_power = read_process_power()
 
@@ -188,12 +188,30 @@ def start_client
    info '########### Client Statistics #############'
 
    crack_server.send_statistics @total_time,@computing_time,@sleep_time,@pass_sec,client_id
-   crack_server.setPassword @password
+   crack_server.setPassword @password unless @password.nil?
 rescue Interrupt
+   info '########### Client Statistics #############'
+   info "Total Time   : %.6f" % [@total_time]
+   info "Process Time : %.6f" % [@computing_time]
+   info "Sleep Time   : %.6f" % [@sleep_time]
+   info "Pass/Sec     : %d" % [@pass_sec]
+   info '########### Client Statistics #############'
 rescue => e
+   info '########### Client Statistics #############'
+   info "Total Time   : %.6f" % [@total_time]
+   info "Process Time : %.6f" % [@computing_time]
+   info "Sleep Time   : %.6f" % [@sleep_time]
+   info "Pass/Sec     : %d" % [@pass_sec]
+   info '########### Client Statistics #############'
 	puts e.message
 	puts e.backtrace.to_a
 ensure
+   info '########### Client Statistics #############'
+   info "Total Time   : %.6f" % [@total_time]
+   info "Process Time : %.6f" % [@computing_time]
+   info "Sleep Time   : %.6f" % [@sleep_time]
+   info "Pass/Sec     : %d" % [@pass_sec]
+   info '########### Client Statistics #############'
    puts "Closing client: "  + client_id.to_s
    crack_server.remove_client client_id
 end
