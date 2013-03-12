@@ -1,5 +1,5 @@
 now_dir = `lspci -vv`
-USE_GPU = !now_dir.match(/NVidia/).nil?
+USE_GPU = !now_dir.match(/nVidia/).nil?
 
 class Hashcat
 	def initialize start,chunk_size,length,alpha,hash_content,session_name
