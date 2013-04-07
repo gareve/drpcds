@@ -10,12 +10,11 @@ gem 'rake'
 
 require 'drb'
 
-require "client/ntlm_hash"
-require "client/hashcat"
+require './client/ntlm_hash'
+require './client/hashcat'
 
-require 'client/client'
+require './client/client'
 
-require "server/crack_server"
-require "server/crack_client"
-require "server/crack_interval"
-
+require './server/crack_server'
+require './server/crack_client'
+require './server/crack_interval'

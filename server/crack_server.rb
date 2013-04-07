@@ -1,3 +1,17 @@
+def infos message, print_stdout = true,print_file = true
+	str = Time.now.strftime("%d/%m/%y %H:%M:%S : ") + message.to_s
+	puts str if print_stdout
+
+	begin
+		if print_file
+			open('master.log','a') do |f|
+				f.puts str
+			end
+		end
+	rescue => e
+	end
+end
+
 class CrackServer
 	include DRbUndumped
 	attr_reader :hash_file,:password,:alphabet,:clients,:start_time,:end_time,:statistics_queue
@@ -17,6 +31,8 @@ class CrackServer
 	end
 
 	def add_client hostname,pass_per_sec
+		return nil unless @password.nil?
+
 		mx = 0
 		@clients.each do |client_id,client|
 			mx = [mx,client.__id__].max if client.hostname == hostname
@@ -25,8 +41,7 @@ class CrackServer
 		client = CrackClient.new hostname,mx+1,pass_per_sec
 		@clients[client.id] = client
 
-		printf("Client [%s] added\n",client.id)
-		printf("   [%d] clients left\n",@clients.size)
+		printf("Client [%s] added. Total = %d\n",client.id,@clients.size)
 
 		add_intervals
 
@@ -38,8 +53,7 @@ class CrackServer
 			client_id_key == client_id
 		end
 
-		printf("Client [%s] removed\n",client_id)
-		printf("   [%d] clients left\n",@clients.size)
+		printf("Client [%s] removed. Total = %d\n",client_id,@clients.size)
 	end
 
 	def get_interval client_id
@@ -80,18 +94,29 @@ class CrackServer
 	end
 
 	def send_statistics total_time,computing_time,sleep_time,pass_sec,client_id
+		#puts client_id + ' <> ' + pass_sec.to_s
+		return if pass_sec <= 10 ** 6
+
 		@statistics_queue << [total_time,computing_time,sleep_time,pass_sec,client_id]
+
+		infos sprintf('[stats]%s;%.6f;%.6f;%.6f;%d',client_id,total_time,computing_time,sleep_time,pass_sec)
+	end
+
+	def send_final_statistics total_time,computing_time,sleep_time,pass_sec,client_id
+		infos sprintf('[final_stats]%s;%.6f;%.6f;%.6f;%d',client_id,total_time,computing_time,sleep_time,pass_sec)
 	end
 
 	def show_statistics
+		return if @statistics_queue.empty?
+
 		until @statistics_queue.empty?
 			total_time,computing_time,sleep_time,pass_sec,client_id = @statistics_queue.shift
 
-			puts "########### Client[#{client_id}] Statistics #############"
-			puts "Total Time   : %.6f" % [total_time]
-			puts "Process Time : %.6f" % [computing_time]
-			puts "Sleep Time   : %.6f" % [sleep_time]
-			puts "Pass/Sec     : %d" % [pass_sec]		
+			infos "########### Client[#{client_id}] Statistics #############"
+			infos "Total Time   : %.6f" % [total_time]
+			infos "Process Time : %.6f" % [computing_time]
+			infos "Sleep Time   : %.6f" % [sleep_time]
+			infos "Pass/Sec     : %d" % [pass_sec]		
 		end
 	end
 

@@ -1,6 +1,3 @@
-now_dir = `lspci -vv`
-USE_GPU = !now_dir.match(/nVidia/).nil?
-
 class Hashcat
 	def initialize start,chunk_size,length,alpha,hash_content,session_name
 		@start = start
@@ -23,10 +20,10 @@ class Hashcat
    def run_cracking
 	cpuHashcat = '/root/hashcat-0.42/hashcat-cli64.bin'
 	gpuHashcat = '/root/oclHashcat-lite-0.14/cudaHashcat-lite64.bin'
+   wincpuHashcat = 'C:\\hashcat-0.44\\hashcat-cli32.exe'
 
 	
 	cmd = nil
-
 	if USE_GPU
    		cmd = gpuHashcat  +
   					" --pw-min=#{@length}"  +
@@ -39,7 +36,10 @@ class Hashcat
    					" #{@hash_content}"+
    					' ' + '?1'*@length
 	else
-	   	cmd = cpuHashcat  +
+      hashcat_path = cpuHashcat
+      hashcat_path = wincpuHashcat if IS_WINDOWS
+
+	   	cmd = hashcat_path  +
                   ' --threads=1' +
   					" --pw-min=#{@length}"  +
   					" --pw-max=#{@length}"  +
@@ -54,7 +54,7 @@ class Hashcat
    					' ' + '?1'*@length
 	end
 
-      	#puts cmd      
+      #puts cmd      
    	output = `#{cmd} 2>&1`
       
    	output.split("\n").each do |line| puts '#'+line end

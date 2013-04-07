@@ -13,7 +13,11 @@ begin
       crack_server.show_statistics
       sleep 5
    end
-   crack_server.show_statistics
+
+   start_wait = Time.now.to_i
+   while Time.now.to_i - start_wait < 60 and crack_server.clients.empty? == false
+      sleep 1
+   end
 
    total = crack_server.end_time.to_i - crack_server.start_time.to_i
 
@@ -21,16 +25,17 @@ begin
    m = (total % (60 ** 2)) / 60
    s = total % 60
 
-   printf("####### Found in %dh:%02d:%02ds #############\n",h,m,s)
-   puts crack_server.password
-   printf("####### Found in %dh:%02d:%02ds #############\n",h,m,s)
+   infos sprintf("####### Found in %dh:%02d:%02ds #############\n",h,m,s)
+   infos crack_server.password
+   infos sprintf("####### Found in %dh:%02d:%02ds #############\n",h,m,s)
 
    #DRb.thread.join
 rescue Interrupt
+   puts "Ctrl + C"
 rescue => e
    puts e.message
    puts e.backtrace.to_a
 ensure
-   puts "Ctrl + C"
+   crack_server.show_statistics
    DRb.stop_service
 end

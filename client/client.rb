@@ -1,10 +1,24 @@
 SLEEP_TIME = 2
 PROCESS_POWER_FILE = 'client_power.stats'
+CONFIG_FILE = 'client.config'
+
+IS_WINDOWS = (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+USE_GPU = false
+unless IS_WINDOWS
+   hardware_specs = `lspci -vv`
+   USE_GPU = !hardware_specs.match(/nVidia/).nil?
+end
+
+#puts '##############'
+#puts RUBY_PLATFORM
+#puts '##############'
 
 def calculate_power
    start = 1
-   #finish = 10 ** 8
-   finish = 10 ** 11
+   finish = 10 ** 8
+   finish = 10 ** 11 if USE_GPU
+   finish = (10 ** 8) / 4 if IS_WINDOWS
+
    
    alphabet = 'abcdefghijklmnopqrstuvwxyz'
 
@@ -103,9 +117,26 @@ def read_process_power
    open(PROCESS_POWER_FILE,'r').read.to_i
 end
 
+def calc_average vc
+   return 0 if vc.empty?
+   return vc.inject{ |sum, el| sum + el }.to_f / vc.size
+end
+
+def get_host
+   raise 'There is no host config for this client' unless File.exist?(CONFIG_FILE)
+   open(CONFIG_FILE,'r').read.to_s.strip
+end
+
 def start_client
+   crack_server = nil
    DRb.start_service
-   crack_server = DRbObject.new nil, 'druby://ip-10-16-2-95.ec2.internal:6666'
+   crack_server = DRbObject.new nil, sprintf('druby://%s:6666',get_host())
+
+   exit 0 unless crack_server.password.nil?
+
+   puts 'Initating Client ' + RUBY_PLATFORM
+
+   power_history = []
 
    pass_per_sec_power = read_process_power()
 
@@ -119,8 +150,9 @@ def start_client
 
    @clientid = client_id
 
-   puts "Client id = " + client_id
-   puts "Hash File request: " + ntlm_hash
+   info 'Starting Cracking'
+   info "Client id = " + client_id
+   info "Hash File request: " + ntlm_hash
 
    open(client_num.to_s + '.hash','w') do |f|
       f.puts ntlm_hash
@@ -162,7 +194,10 @@ def start_client
                                  ntlm_hash,
                                  client_num)
 
-            @computing_time += process_time            
+            @computing_time += process_time
+            power_history << pass_per_sec
+
+
 
             unless ans.nil?
                @password_found = true 
@@ -173,6 +208,9 @@ def start_client
                @pass_sec = [@pass_sec,pass_per_sec].max   
             end
          end
+
+         crack_server.send_statistics @total_time,@computing_time,@sleep_time,calc_average(power_history.last(5)),client_id if power_history.size % 5 == 0
+
       else
          puts('sleeping %d secs'%SLEEP_TIME)
          sleep SLEEP_TIME
@@ -180,32 +218,21 @@ def start_client
       end
    end
 
-   info '########### Client Statistics #############'
-   info "Total Time   : %.6f" % [@total_time]
-   info "Process Time : %.6f" % [@computing_time]
-   info "Sleep Time   : %.6f" % [@sleep_time]
-   info "Pass/Sec     : %d" % [@pass_sec]
-   info '########### Client Statistics #############'
-
-   crack_server.send_statistics @total_time,@computing_time,@sleep_time,@pass_sec,client_id
+   #crack_server.send_statistics @total_time,@computing_time,@sleep_time,calc_average(power_history.last(5)),client_id
    crack_server.setPassword @password unless @password.nil?
 rescue Interrupt
-   info '########### Client Statistics #############'
-   info "Total Time   : %.6f" % [@total_time]
-   info "Process Time : %.6f" % [@computing_time]
-   info "Sleep Time   : %.6f" % [@sleep_time]
-   info "Pass/Sec     : %d" % [@pass_sec]
-   info '########### Client Statistics #############'
 rescue => e
-   info '########### Client Statistics #############'
-   info "Total Time   : %.6f" % [@total_time]
-   info "Process Time : %.6f" % [@computing_time]
-   info "Sleep Time   : %.6f" % [@sleep_time]
-   info "Pass/Sec     : %d" % [@pass_sec]
-   info '########### Client Statistics #############'
-	puts e.message
-	puts e.backtrace.to_a
+   if crack_server.nil? or @total_time.nil?
+      puts 'Initating Client ' + RUBY_PLATFORM + ' No server'
+      return
+   end
+
+   puts e.message
+	puts e.backtrace.to_a   
 ensure
+
+   return if crack_server.nil? or @total_time.nil?
+
    info '########### Client Statistics #############'
    info "Total Time   : %.6f" % [@total_time]
    info "Process Time : %.6f" % [@computing_time]
@@ -213,5 +240,12 @@ ensure
    info "Pass/Sec     : %d" % [@pass_sec]
    info '########### Client Statistics #############'
    puts "Closing client: "  + client_id.to_s
+
+
+   while power_history.empty? == false and power_history.first < 10 ** 6
+      power_history.shift
+   end
+
+   crack_server.send_final_statistics @total_time,@computing_time,@sleep_time,calc_average(power_history),client_id
    crack_server.remove_client client_id
 end
