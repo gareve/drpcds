@@ -18,46 +18,46 @@ class Hashcat
    end
 
    def run_cracking
-	cpuHashcat = '/root/hashcat-0.42/hashcat-cli64.bin'
-	gpuHashcat = '/root/oclHashcat-lite-0.14/cudaHashcat-lite64.bin'
-   wincpuHashcat = 'C:\\hashcat-0.44\\hashcat-cli32.exe'
+   	cpuHashcat = '~/hashcat-0.44/hashcat-cli64.bin'
+   	gpuHashcat = '~/oclHashcat-lite-0.14/cudaHashcat-lite64.bin'
+      wincpuHashcat = 'C:\\hashcat-0.44\\hashcat-cli32.exe'
 
-	
-	cmd = nil
-	if USE_GPU
-   		cmd = gpuHashcat  +
-  					" --pw-min=#{@length}"  +
-  					" --pw-max=#{@length}"  +
-   					' --hash-type=1000' + #NTLM
-                  " --pw-skip=#{@start}" +
-                  " --pw-limit=#{@start + @chunk_size}" +
-   					' --quiet'+
-                  " --custom-charset1=#{@alphabet}"+
-   					" #{@hash_content}"+
-   					' ' + '?1'*@length
-	else
-      hashcat_path = cpuHashcat
-      hashcat_path = wincpuHashcat if IS_WINDOWS
+   	
+   	cmd = nil
+   	if USE_GPU
+      		cmd = gpuHashcat  +
+     					" --pw-min=#{@length}"  +
+     					" --pw-max=#{@length}"  +
+      					' --hash-type=1000' + #NTLM
+                     " --pw-skip=#{@start}" +
+                     " --pw-limit=#{@start + @chunk_size}" +
+      					' --quiet'+
+                     " --custom-charset1=#{@alphabet}"+
+      					" #{@hash_content}"+
+      					' ' + '?1'*@length
+   	else
+         hashcat_path = cpuHashcat
+         hashcat_path = wincpuHashcat if IS_WINDOWS
 
-	   	cmd = hashcat_path  +
-                  ' --threads=1' +
-  					" --pw-min=#{@length}"  +
-  					" --pw-max=#{@length}"  +
-   					' --hash-mode=1000' + #NTLM
-   					' --attack-mode=3' +
-                  " --words-skip=#{@start}" +
-                  " --words-limit=#{@chunk_size}" +
-   					' --quiet'+
-                  ' --disable-potfile'+
-                  " --custom-charset1=#{@alphabet}"+
-   					" #{@hash_file}"+
-   					' ' + '?1'*@length
-	end
+   	   	cmd = hashcat_path  +
+                     ' --threads=1' +
+        					" --pw-min=#{@length}"  +
+        					" --pw-max=#{@length}"  +
+      					' --hash-mode=1000' + #NTLM
+      					' --attack-mode=3' +
+                     " --words-skip=#{@start}" +
+                     " --words-limit=#{@chunk_size}" +
+      					' --quiet'+
+                     ' --disable-potfile'+
+                     " --custom-charset1=#{@alphabet}"+
+      					" #{@hash_file}"+
+      					' ' + '?1'*@length
+   	end
 
-      #puts cmd      
+      #puts cmd
    	output = `#{cmd} 2>&1`
       
-   	output.split("\n").each do |line| puts '#'+line end
+   	#output.split("\n").each do |line| puts '#'+line end
 
       #File.delete(@hash_file)
       #File.delete('eula.accepted')

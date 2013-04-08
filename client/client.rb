@@ -3,8 +3,10 @@ PROCESS_POWER_FILE = 'client_power.stats'
 CONFIG_FILE = 'client.config'
 
 IS_WINDOWS = (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
-USE_GPU = false
-unless IS_WINDOWS
+
+if IS_WINDOWS
+   USE_GPU = false
+else
    hardware_specs = `lspci -vv`
    USE_GPU = !hardware_specs.match(/nVidia/).nil?
 end
@@ -75,19 +77,20 @@ end
 def num_to_base num,alphabet,length
    len = alphabet.size
 
-   res = num.to_s(len)
+   res = num.to_i.to_s(len)
 
    res.size.times do |i|
       d = to_digit(res[i])
       res[i] = alphabet[d]
    end
-if IS_187
-   res = (alphabet[0].chr * [0,length - res.size].max) + res
-else
-   res = (alphabet[0] * [0,length - res.size].max) + res
-end
 
-   res
+   if IS_187
+      res = (alphabet[0].chr * [0,length - res.size].max) + res
+   else
+      res = (alphabet[0] * [0,length - res.size].max) + res
+   end
+
+   return res
 end
 
 def crack_interval start,finish,length,alphabet,ntlm_hash,session_name
@@ -105,6 +108,9 @@ def crack_interval start,finish,length,alphabet,ntlm_hash,session_name
             chunk_size,
             process_time,
             pass_per_sec,
+
+            #Only for reference
+            #hashcat does not process in a lexicographic fashion
          	num_to_base(start,alphabet,length),
          	num_to_base(finish,alphabet,length)
          )
@@ -130,11 +136,12 @@ end
 def start_client
    crack_server = nil
    DRb.start_service
-   crack_server = DRbObject.new nil, sprintf('druby://%s:6666',get_host())
+   host = get_host()
+   crack_server = DRbObject.new nil, sprintf('druby://%s:6666',host)
 
    exit 0 unless crack_server.password.nil?
-
-   puts 'Initating Client ' + RUBY_PLATFORM
+   
+   printf("Initating Client %s [%s]\n",RUBY_PLATFORM,host)
 
    power_history = []
 
@@ -209,7 +216,7 @@ def start_client
             end
          end
 
-         crack_server.send_statistics @total_time,@computing_time,@sleep_time,calc_average(power_history.last(5)),client_id if power_history.size % 5 == 0
+         crack_server.send_statistics @total_time,@computing_time,@sleep_time,calc_average(power_history.last(3)),client_id if power_history.size % 3 == 0
 
       else
          puts('sleeping %d secs'%SLEEP_TIME)
@@ -222,8 +229,10 @@ def start_client
    crack_server.setPassword @password unless @password.nil?
 rescue Interrupt
 rescue => e
+   printf("%s ",e) if e.to_s.match(/connection/).nil?
    if crack_server.nil? or @total_time.nil?
-      puts 'Initating Client ' + RUBY_PLATFORM + ' No server'
+      host = get_host()
+      printf("Initating Client %s [%s] server offline\n",RUBY_PLATFORM,host)
       return
    end
 

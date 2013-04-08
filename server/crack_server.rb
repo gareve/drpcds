@@ -93,13 +93,24 @@ class CrackServer
 		end
 	end
 
+   def actual_capacity
+      sum = 0
+      @clients.each do |key,client|
+         sum += client.pass_per_sec
+      end
+      return sum
+   end
+
 	def send_statistics total_time,computing_time,sleep_time,pass_sec,client_id
 		#puts client_id + ' <> ' + pass_sec.to_s
 		return if pass_sec <= 10 ** 6
 
 		@statistics_queue << [total_time,computing_time,sleep_time,pass_sec,client_id]
+      
+      @clients[client_id].pass_per_sec = pass_sec
 
 		infos sprintf('[stats]%s;%.6f;%.6f;%.6f;%d',client_id,total_time,computing_time,sleep_time,pass_sec)
+      infos sprintf('[actual_capacity] = %d',self.actual_capacity)
 	end
 
 	def send_final_statistics total_time,computing_time,sleep_time,pass_sec,client_id

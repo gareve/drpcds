@@ -5,7 +5,7 @@ Bundler.require
 
 desc 'Generate a new hash file as a unix passwd file'
 task :gen do
-    test_word = 'zzzzzz'
+   test_word = 'abcdefg'
 	puts "Generating a new passwd Hash File of size #{test_word.length}"
 
     open('file.hash','w') do |f|
@@ -34,5 +34,6 @@ end
 
 desc 'Rspec Tests'
 task :test do
-	system 'rspec client/tests.rb --format NyanCatWideFormatter'
+	#system 'rspec client/tests.rb --format NyanCatWideFormatter'
+   system 'rspec client/tests.rb'
 end

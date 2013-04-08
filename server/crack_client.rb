@@ -2,6 +2,7 @@ class CrackClient
 	include DRbUndumped
 
 	attr_reader :queue,:hostname,:__id__,:pass_per_sec,:pass
+   attr_writer :pass_per_sec
 
 	def initialize hostname,client_id,pass_per_sec
 		@queue = []
